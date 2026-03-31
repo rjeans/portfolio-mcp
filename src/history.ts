@@ -1,4 +1,15 @@
 import YahooFinance from "yahoo-finance2";
+
+const FETCH_TIMEOUT_MS = 30_000; // 30 seconds per ticker
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), ms)
+    ),
+  ]);
+}
 import {
   Portfolio,
   Transaction,
@@ -97,14 +108,17 @@ async function fetchHistoricalPrices(
   await Promise.all(
     tickers.map(async (ticker) => {
       try {
-        const [history, quote] = await Promise.all([
-          yf.historical(ticker, {
-            period1: startDate,
-            period2: endDate,
-            interval: yfInterval as "1d" | "1wk" | "1mo",
-          }),
-          yf.quote(ticker),
-        ]);
+        const [history, quote] = await withTimeout(
+          Promise.all([
+            yf.historical(ticker, {
+              period1: startDate,
+              period2: endDate,
+              interval: yfInterval as "1d" | "1wk" | "1mo",
+            }),
+            yf.quote(ticker),
+          ]),
+          FETCH_TIMEOUT_MS
+        );
 
         const isGBp = quote.currency === "GBp";
         const priceMap = new Map<string, number>();

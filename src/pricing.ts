@@ -2,6 +2,16 @@ import YahooFinance from "yahoo-finance2";
 import { Portfolio, PriceCacheEntry } from "./types.js";
 
 const STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
+const QUOTE_TIMEOUT_MS = 10_000; // 10 seconds per quote
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), ms)
+    ),
+  ]);
+}
 
 const yf = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 
@@ -29,7 +39,7 @@ export async function fetchQuote(
   ticker: string
 ): Promise<{ price: number; currency: string; name: string } | null> {
   try {
-    const quote = await yf.quote(ticker);
+    const quote = await withTimeout(yf.quote(ticker), QUOTE_TIMEOUT_MS);
     if (quote.regularMarketPrice == null) return null;
     return {
       price: quote.regularMarketPrice,

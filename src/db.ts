@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Portfolio } from "./types.js";
 
-const DATA_DIR = path.join(__dirname, "..", "..", "data");
+const DATA_DIR = path.join(__dirname, "..", "data");
 const DB_PATH = path.join(DATA_DIR, "portfolio.json");
 
 function emptyPortfolio(): Portfolio {

@@ -17,6 +17,8 @@ import {
   getPortfolioHistoryTool,
   setPriceTool,
   importHistoricalPricesTool,
+  setManualPricingTool,
+  getPriceHistoryTool,
 } from "./tools/portfolio-tools.js";
 
 const server = new McpServer({
@@ -190,6 +192,43 @@ server.tool(
   },
   async (args) => ({
     content: [{ type: "text", text: await setPriceTool(args) }],
+  })
+);
+
+server.tool(
+  "get_price_history",
+  "Get stored price history for a ticker, including both manually imported prices and cached prices",
+  {
+    ticker: z.string().describe("Ticker symbol as used in transactions"),
+    startDate: z
+      .string()
+      .optional()
+      .describe("Start date (YYYY-MM-DD). Defaults to 1 year ago."),
+    endDate: z
+      .string()
+      .optional()
+      .describe("End date (YYYY-MM-DD). Defaults to today."),
+  },
+  async (args) => ({
+    content: [{ type: "text", text: await getPriceHistoryTool(args) }],
+  })
+);
+
+server.tool(
+  "set_manual_pricing",
+  "Flag a ticker as requiring manual pricing so it is skipped during automatic Yahoo Finance price refresh",
+  {
+    ticker: z.string().describe("Ticker symbol as used in transactions"),
+    manual: z
+      .boolean()
+      .describe("true to require manual pricing, false to re-enable auto-pricing"),
+    url: z
+      .string()
+      .optional()
+      .describe("URL for looking up the price manually (e.g. FT fund page)"),
+  },
+  async (args) => ({
+    content: [{ type: "text", text: await setManualPricingTool(args) }],
   })
 );
 

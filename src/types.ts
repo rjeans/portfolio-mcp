@@ -39,6 +39,8 @@ export interface Portfolio {
   transactions: Transaction[];
   priceCache: Record<string, PriceCacheEntry>;
   manualPriceHistory?: Record<string, { date: string; price: number }[]>;
+  manualPricingTickers?: string[]; // tickers that should not be auto-priced from Yahoo
+  pricingUrls?: Record<string, string>; // URLs for manual price lookup by ticker
 }
 
 // Computed views

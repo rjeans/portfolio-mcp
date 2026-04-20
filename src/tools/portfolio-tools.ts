@@ -115,6 +115,86 @@ export async function setPriceTool(args: {
   });
 }
 
+export async function setManualPricingTool(args: {
+  ticker: string;
+  manual: boolean;
+  url?: string;
+}): Promise<string> {
+  const portfolio = loadPortfolio();
+  if (!portfolio.manualPricingTickers) {
+    portfolio.manualPricingTickers = [];
+  }
+  if (!portfolio.pricingUrls) {
+    portfolio.pricingUrls = {};
+  }
+
+  const idx = portfolio.manualPricingTickers.indexOf(args.ticker);
+  if (args.manual && idx === -1) {
+    portfolio.manualPricingTickers.push(args.ticker);
+  } else if (!args.manual && idx !== -1) {
+    portfolio.manualPricingTickers.splice(idx, 1);
+  }
+
+  if (args.url) {
+    portfolio.pricingUrls[args.ticker] = args.url;
+  }
+
+  savePortfolio(portfolio);
+  return JSON.stringify({
+    success: true,
+    ticker: args.ticker,
+    manualPricing: args.manual,
+    url: portfolio.pricingUrls[args.ticker] ?? null,
+    allManualTickers: portfolio.manualPricingTickers,
+  });
+}
+
+export async function getPriceHistoryTool(args: {
+  ticker: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<string> {
+  const portfolio = loadPortfolio();
+  const endDate = args.endDate ?? new Date().toISOString().slice(0, 10);
+  const startDate =
+    args.startDate ??
+    new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  // Merge manual prices and cached current price into a single sorted series
+  const priceMap = new Map<string, number>();
+
+  // Manual historical prices
+  const manual = portfolio.manualPriceHistory?.[args.ticker];
+  if (manual) {
+    for (const entry of manual) {
+      if (entry.date >= startDate && entry.date <= endDate) {
+        priceMap.set(entry.date, entry.price);
+      }
+    }
+  }
+
+  // Current cached price (add as today's date if in range)
+  const cached = portfolio.priceCache[args.ticker];
+  if (cached) {
+    const cachedDate = cached.lastUpdated.slice(0, 10);
+    if (cachedDate >= startDate && cachedDate <= endDate) {
+      priceMap.set(cachedDate, cached.price);
+    }
+  }
+
+  const series = [...priceMap.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, price]) => ({ date, price }));
+
+  return JSON.stringify({
+    ticker: args.ticker,
+    startDate,
+    endDate,
+    count: series.length,
+    series,
+  }, null, 2);
+}
+
 export async function importHistoricalPricesTool(args: {
   ticker: string;
   prices: { date: string; price: number }[];

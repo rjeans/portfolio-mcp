@@ -59,7 +59,10 @@ export async function refreshPrices(
   const updated: string[] = [];
   const failed: string[] = [];
 
+  const manualSet = new Set(portfolio.manualPricingTickers ?? []);
+
   for (const ticker of tickers) {
+    if (manualSet.has(ticker)) continue;
     if (!force && !isPriceStale(portfolio.priceCache[ticker])) continue;
 
     const quote = await fetchQuote(ticker);
@@ -72,6 +75,10 @@ export async function refreshPrices(
         currency,
         lastUpdated: new Date().toISOString(),
       };
+      updated.push(ticker);
+    } else if (portfolio.priceCache[ticker]) {
+      // Keep the last good price but refresh the timestamp so we don't retry every call
+      portfolio.priceCache[ticker].lastUpdated = new Date().toISOString();
       updated.push(ticker);
     } else {
       failed.push(ticker);

@@ -65,7 +65,13 @@ Add to your MCP configuration:
 
 ## Data Storage
 
-Portfolio data is stored in `data/portfolio.json` (excluded from git). The file is created automatically on first use.
+Portfolio data is stored in `~/.config/portfolio-mcp/portfolio.json` (same path on macOS and Linux). The directory and file are created automatically on first use.
+
+Set `PORTFOLIO_DATA_DIR` to override — useful for development or running against a test dataset:
+
+```bash
+PORTFOLIO_DATA_DIR=./data npm run start
+```
 
 Prices from Yahoo Finance are cached for 24 hours. Manual prices persist until overwritten.
 

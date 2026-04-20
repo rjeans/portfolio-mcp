@@ -1,8 +1,11 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import { Portfolio } from "./types.js";
 
-const DATA_DIR = path.join(__dirname, "..", "data");
+const DATA_DIR =
+  process.env.PORTFOLIO_DATA_DIR ??
+  path.join(os.homedir(), ".config", "portfolio-mcp");
 const DB_PATH = path.join(DATA_DIR, "portfolio.json");
 
 function emptyPortfolio(): Portfolio {

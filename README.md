@@ -29,7 +29,9 @@ A Model Context Protocol (MCP) server for tracking multi-person, multi-account i
 | `get_asset_allocation` | Get allocation breakdown by holding, person, and account type |
 | `refresh_prices` | Refresh live prices from Yahoo Finance |
 | `set_price` | Manually set the current price for a ticker |
+| `set_manual_pricing` | Flag a ticker as manually priced so it is skipped during auto-refresh (optionally store a lookup URL) |
 | `import_historical_prices` | Import historical prices for use in portfolio history |
+| `get_price_history` | Get stored price history (imported + cached) for a ticker |
 | `get_portfolio_history` | Get historical portfolio valuation as a time series |
 
 ## Setup
